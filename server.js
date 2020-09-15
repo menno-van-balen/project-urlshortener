@@ -4,6 +4,7 @@ var express = require("express");
 var mongo = require("mongodb");
 var mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const dns = require("dns");
 const { DB_URI } = require("./config");
 
 var cors = require("cors");
@@ -17,6 +18,7 @@ var port = process.env.PORT || 3000;
 mongoose.connect(DB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useFindAndModify: false,
 });
 
 app.use(cors());
@@ -40,15 +42,71 @@ const urlSchema = new schema({
   short_url: { type: String, required: true },
 });
 
-const url = mongoose.model("url", urlSchema);
+const Url = mongoose.model("Url", urlSchema);
+
+// we need a schema with count to keep track of the short url's used
+const countSchema = new schema({
+  count: Number,
+});
+
+const Count = mongoose.model("Count", countSchema);
+
+// find count
+const findCount = () => {
+  Count.find({})
+    .exec()
+    .then((doc) => {
+      console.log(doc);
+      if (doc[0]) {
+        return (count = doc[0].count);
+      } else {
+        count = 1;
+        console.log("creating count");
+        Count.create({ count: 1 }, (err) => {
+          if (err) console.log(err);
+        });
+      }
+    })
+    .catch((err) => console.log(err));
+};
+
+// update count
+const onePlusCount = () => {
+  Count.findOneAndUpdate(
+    { count: count },
+    { count: (count += 1) },
+    { new: true }
+  ).catch((err) => console.log(err));
+};
+
+const findUrl = (url, res) => {
+  Url.findOne({ original_url: url })
+    .exec()
+    .then((doc) => {
+      if (doc) res.json(doc);
+      console.log("url not found");
+    })
+    .catch((err) => console.log(err));
+};
 
 // get post url
-let count = 0;
+let count;
+findCount();
 app.post("/api/shorturl/new", function (req, res) {
-  count += 1;
+  console.log(count);
   const original_url = req.body.url.replace(/^https?:\/\//, "");
   const short_url = count.toString();
   console.log(short_url);
+  onePlusCount();
+  dns.lookup(original_url, (err, addresses, family) => {
+    if (err) {
+      console.log(err);
+      res.json({ error: "invalid URL" });
+    } else {
+      findUrl(original_url, res);
+    }
+    // console.log(addresses);
+  });
   // res.json({ greeting: "hello API" });
 });
 
