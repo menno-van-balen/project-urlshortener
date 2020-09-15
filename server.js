@@ -51,12 +51,12 @@ const countSchema = new schema({
 
 const Count = mongoose.model("Count", countSchema);
 
-// find count
+// find last count on pageloading and update count
+// for every countnumber there is a short_url
 const findCount = () => {
   Count.find({})
     .exec()
     .then((doc) => {
-      console.log(doc);
       if (doc[0]) {
         return (count = doc[0].count);
       } else {
@@ -70,7 +70,6 @@ const findCount = () => {
     .catch((err) => console.log(err));
 };
 
-// update count
 const onePlusCount = () => {
   Count.findOneAndUpdate(
     { count: count },
@@ -79,12 +78,36 @@ const onePlusCount = () => {
   ).catch((err) => console.log(err));
 };
 
-const findUrl = (url, res) => {
-  Url.findOne({ original_url: url })
+// find url
+const findUrl = (original_url, short_url, res) => {
+  Url.findOne({ original_url })
     .exec()
     .then((doc) => {
-      if (doc) res.json(doc);
-      console.log("url not found");
+      if (doc) {
+        const original_url = doc.original_url;
+        const short_url = doc.short_url;
+        res.json({ original_url, short_url });
+      } else {
+        console.log("creating url");
+        createUrl(original_url, short_url, res);
+        onePlusCount();
+      }
+    })
+    .catch((err) => console.log(err));
+};
+
+const createUrl = (original_url, short_url, res) => {
+  Url.create(
+    {
+      original_url,
+      short_url,
+    }
+    // (err) => console.log(err)
+  )
+    .then((doc) => {
+      const original_url = doc.original_url;
+      const short_url = doc.short_url;
+      res.json({ original_url, short_url });
     })
     .catch((err) => console.log(err));
 };
@@ -96,18 +119,14 @@ app.post("/api/shorturl/new", function (req, res) {
   console.log(count);
   const original_url = req.body.url.replace(/^https?:\/\//, "");
   const short_url = count.toString();
-  console.log(short_url);
-  onePlusCount();
-  dns.lookup(original_url, (err, addresses, family) => {
+  dns.lookup(original_url, (err) => {
     if (err) {
       console.log(err);
       res.json({ error: "invalid URL" });
     } else {
-      findUrl(original_url, res);
+      findUrl(original_url, short_url, res);
     }
-    // console.log(addresses);
   });
-  // res.json({ greeting: "hello API" });
 });
 
 app.listen(port, function () {
