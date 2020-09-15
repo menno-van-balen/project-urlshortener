@@ -1,17 +1,18 @@
 # API Project: URL Shortener Microservice for freeCodeCamp
 
-[![Run on Repl.it](https://repl.it/badge/github/freeCodeCamp/boilerplate-project-urlshortener)](https://repl.it/github/freeCodeCamp/boilerplate-project-urlshortener)
+[See and Run on Repl.it](https://repl.it/@mennovanbalen/project-urlshortener)
+
+[Run it](https://project-urlshortener.mennovanbalen.repl.co/)
 
 ### User Stories
 
 1. I can POST a URL to `[project_url]/api/shorturl/new` and I will receive a shortened URL in the JSON response. Example : `{"original_url":"www.google.com","short_url":1}`
-2. If I pass an invalid URL that doesn't follow the valid `http(s)://www.example.com(/more/routes)` format, the JSON response will contain an error like `{"error":"invalid URL"}`. *HINT*: to be sure that the submitted url points to a valid site you can use the function `dns.lookup(host, cb)` from the `dns` core module.
+2. If I pass an invalid URL that doesn't follow the valid `http(s)://www.example.com(/more/routes)` format, the JSON response will contain an error like `{"error":"invalid URL"}`. _HINT_: to be sure that the submitted url points to a valid site you can use the function `dns.lookup(host, cb)` from the `dns` core module.
 3. When I visit the shortened URL, it will redirect me to my original link.
-
 
 #### Creation Example:
 
-POST [project_url]/api/shorturl/new - body (urlencoded) :  url=https://www.google.com
+POST [project_url]/api/shorturl/new - body (urlencoded) : url=https://www.google.com
 
 #### Usage:
 
